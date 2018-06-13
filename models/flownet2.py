@@ -572,7 +572,6 @@ class Flownet2:
 
         return blobs
 
-    # very beautiful code
     def all_variables(self):
         return [('netsd_deconv5_w', (4, 4, 512, 1024)),
             ('netsd_conv1_b', (64,)),

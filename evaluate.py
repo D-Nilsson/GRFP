@@ -55,20 +55,16 @@ def evaluate(args):
     if args.flow in ['flownet1', 'flownet2']:
         saver_fn = tf.train.Saver([k for k in tf.global_variables() if k.name.startswith('flow/')])
 
-    init = tf.global_variables_initializer()
     with tf.Session() as sess:
-        #sess.run(init)
-
         saver.restore(sess, './checkpoints/lrr_grfp')
         
         if args.flow == 'flownet1':
-            #flow_network.load_parameters(sess)
-            #saver_fn.save(sess, './checkpoints/flownet1')
             saver_fn.restore(sess, './checkpoints/flownet1')
         elif args.flow == 'flownet2':
             saver_fn.restore(sess, './checkpoints/flownet2')
 
-        #saver.save(sess, './checkpoints/lrr_grfp')
+        #saver_fn.save(sess, './checkpoints/flownet1', write_meta_graph=False)
+        #saver.save(sess, './checkpoints/lrr_grfp', write_meta_graph=False)
 
         L = glob.glob(os.path.join(cfg.cityscapes_dir, 'gtFine', data_split, "*", "*labelIds.png"))
         for (progress_counter, im_path) in enumerate(L):
@@ -139,7 +135,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--static', help='Which static network to use.', required=True)
     parser.add_argument('--flow', help='Which optical flow method to use.', required=True)
-    parser.add_argument('--frames', type=int, help='Number of frames to use.', default=5, required=False)
+    parser.add_argument('--frames', dest='frames', type=int, help='Number of frames to use.', default=5, required=False)
 
     args = parser.parse_args()
 
