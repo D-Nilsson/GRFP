@@ -4,6 +4,7 @@ import tensorflow as tf
 import config as cfg
 from models.stgru import STGRU
 from models.lrr import LRR
+from models.dilation import dilation10network
 from models.flownet2 import Flownet2
 from models.flownet1 import Flownet1
 from tensorflow.python.framework import ops
@@ -26,7 +27,7 @@ def evaluate(args):
     cs_id2trainid, cs_id2name = pickle.load(f)
     f.close()
 
-    assert args.static == 'lrr', "Only LRR is supported for now."
+    assert args.static in ['dilation', 'lrr'], "Only dilation and LRR are supported for now."
     
     if args.flow == 'flownet2':
         with tf.variable_scope('flow'):
@@ -47,17 +48,25 @@ def evaluate(args):
         input_segmentation, prev_h, new_h, \
         prediction = RNN.get_one_step_predictor()
 
-    static_input = tf.placeholder(tf.float32)
-    static_network = LRR()
-    static_output = static_network(static_input)
+    if args.static == 'lrr':
+        static_input = tf.placeholder(tf.float32)
+        static_network = LRR()
+        static_output = static_network(static_input)
+    elif args.static == 'dilation':
+        static_input = tf.placeholder(tf.float32)
+        static_network = dilation10network()
+        static_output = static_network.get_output_tensor(static_input, im_size)
 
     saver = tf.train.Saver([k for k in tf.global_variables() if not k.name.startswith('flow/')])
     if args.flow in ['flownet1', 'flownet2']:
         saver_fn = tf.train.Saver([k for k in tf.global_variables() if k.name.startswith('flow/')])
 
     with tf.Session() as sess:
-        saver.restore(sess, './checkpoints/lrr_grfp')
-        
+        if args.static == 'lrr':
+            saver.restore(sess, './checkpoints/lrr_grfp')
+        elif args.static == 'dilation':
+            saver.restore(sess, './checkpoints/dilation_grfp')
+
         if args.flow == 'flownet1':
             saver_fn.restore(sess, './checkpoints/flownet1')
         elif args.flow == 'flownet2':
@@ -93,7 +102,15 @@ def evaluate(args):
                         flow = flow[np.newaxis,...]
 
                 # Static segmentation
-                x = sess.run(static_output, feed_dict={static_input: im})
+                if args.static == 'dilation':
+                    # augment a 186x186 border around the image and subtract the mean
+                    im_aug = cv2.copyMakeBorder(im[0], 186, 186, 186, 186, cv2.BORDER_REFLECT_101)
+                    im_aug = im_aug - image_mean
+                    im_aug = im_aug[np.newaxis,...]
+
+                    x = sess.run(static_output, feed_dict={static_input: im_aug})
+                elif args.static == 'lrr':
+                    x = sess.run(static_output, feed_dict={static_input: im})
                 
                 if first_frame:
                     # the hidden state is simple the static segmentation for the first frame
