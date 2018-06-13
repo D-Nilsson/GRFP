@@ -78,7 +78,7 @@ class STGRU:
         return h
 
     def softmax_last_dim(self, x):
-        # apply softmax to a 4D vector along the last dimension
+        # apply softmax to a 4D tensor along the last dimension
         S = tf.shape(x)
         y = tf.reshape(x, [-1, S[4-1]])
         y = tf.nn.softmax(y)

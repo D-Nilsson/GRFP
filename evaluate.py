@@ -135,7 +135,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--static', help='Which static network to use.', required=True)
     parser.add_argument('--flow', help='Which optical flow method to use.', required=True)
-    parser.add_argument('--frames', dest='frames', type=int, help='Number of frames to use.', default=5, required=False)
+    parser.add_argument('--frames', type=int, help='Number of frames to use.', default=5, required=False)
 
     args = parser.parse_args()
 
