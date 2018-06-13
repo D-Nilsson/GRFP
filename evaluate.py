@@ -63,9 +63,6 @@ def evaluate(args):
         elif args.flow == 'flownet2':
             saver_fn.restore(sess, './checkpoints/flownet2')
 
-        #saver_fn.save(sess, './checkpoints/flownet1', write_meta_graph=False)
-        #saver.save(sess, './checkpoints/lrr_grfp', write_meta_graph=False)
-
         L = glob.glob(os.path.join(cfg.cityscapes_dir, 'gtFine', data_split, "*", "*labelIds.png"))
         for (progress_counter, im_path) in enumerate(L):
             parts = im_path.split('/')[-1].split('_')
@@ -94,7 +91,6 @@ def evaluate(args):
                         flow = cv2.calcOpticalFlowFarneback(im_gray, last_im_gray, None, 0.5, 3, 15, 3, 5, 1.2, 0)
                         flow = flow[...,(1, 0)]
                         flow = flow[np.newaxis,...]
-                        print("Flow!")
 
                 # Static segmentation
                 x = sess.run(static_output, feed_dict={static_input: im})
