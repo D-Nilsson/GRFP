@@ -11,14 +11,17 @@ Download all pretrained models from [here](https://drive.google.com/open?id=1eGy
 
 ### Usage
 
-
+Evaluate the GRFP(LRR-4x, FlowNet2) setup on the validation set by running
+```
+python evaluate.py --static lrr --flow flownet2
+```
 
 Evaluation on PSP and Dilation10 as well as code for training will be added soon.
 
 The values in table 9 can be reproduced by running the following. It takes about 4 hours on a titan X GPU.
 ```
-python evaluate.py --static lrr --flow flownet1
 python evaluate.py --static lrr --flow flownet2
+python evaluate.py --static lrr --flow flownet1
 python evaluate.py --static lrr --flow farneback
 ```
 
