@@ -15,36 +15,6 @@ REGISTER_OP("BilinearWarpingGrad")
   .Output("grad_x: float")
   .Output("grad_flow: float");
 
-class BilinearWarpingOp : public OpKernel {
-public:
-  explicit BilinearWarpingOp(OpKernelConstruction* context) : OpKernel(context) {}
-
-  void Compute(OpKernelContext* context) override {
-    const Tensor& input_tensor = context->input(0);
-    auto input = input_tensor.flat<float>();
-
-    const Tensor& flow_tensor = context->input(1);
-    auto flow = flow_tensor.flat<float>();
-
-    //OP_REQUIRES_OK(context, input_tensor.dims() == 4);
-    //OP_REQUIRES_OK(context, flow_tensor.dims() == 4);
-    OP_REQUIRES(context, false, errors::InvalidArgument("Cpu not supported!"))
-
-    Tensor* output_tensor = NULL;
-    OP_REQUIRES_OK(context, context->allocate_output(0, input_tensor.shape(), &output_tensor));
-    auto output = output_tensor->flat<float>();
-
-    const int N = input.size();
-    for(int i = 0; i < N; i++) {
-      output(i) = 0;
-    }
-
-    if(N > 0) {
-      output(0) = input(0) + 1.;
-    }
-  }
-};
-
 void BilinearWarpingLauncher(const float* input, const float* flow, float* out, 
     const int count, const int channels, const int height, const int width);
 
