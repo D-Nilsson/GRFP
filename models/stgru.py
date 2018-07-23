@@ -45,6 +45,43 @@ class STGRU:
         prediction = tf.argmax(new_h, 3)
         return input_images_tensor, input_flow, input_segmentation, prev_h, new_h, prediction
 
+    def get_optimizer(self, N_steps):
+        input_images_tensor = tf.placeholder('float', [N_steps, 1, self.height, self.width, 3], name="gru_input_images")
+        input_images = tf.unstack(input_images_tensor, num=N_steps)
+
+        input_flow_tensor = tf.placeholder('float', [N_steps-1, 1, self.height, self.width, 2], name="gru_input_flows")
+        input_flow = tf.unstack(input_flow_tensor, num=N_steps-1)
+
+        input_segmentation_tensor = tf.placeholder('float', [N_steps, 1, self.height, self.width, self.channels], name="gru_input_unaries")
+        input_segmentation = tf.unstack(input_segmentation_tensor, num=N_steps)
+
+        outputs = [input_segmentation[0]]
+        for t in range(1, N_steps):
+            h = self.get_GRU_cell(input_images[t], input_images[t-1], \
+                input_flow[t-1], outputs[-1], input_segmentation[t])
+            outputs.append(h)
+
+        # the loss is tricky to implement since softmaxloss requires [i,j] matrix
+        # with j ranging over the classes
+        # the image has to be manipulated to fit
+        scores = tf.reshape(outputs[-1], [self.height*self.width, self.channels])
+        prediction = tf.argmax(scores, 1)
+        prediction = tf.reshape(prediction, [self.height, self.width])
+
+        targets = tf.placeholder('int64', [self.height, self.width])
+        targets_r = tf.reshape(targets, [self.height*self.width])
+        idx = targets_r < self.channels # classes are 0,1,...,c-1 with 255 being unknown
+        loss = tf.reduce_sum(tf.nn.sparse_softmax_cross_entropy_with_logits(
+            logits=tf.boolean_mask(scores, idx), labels=tf.boolean_mask(targets_r, idx)))
+
+        learning_rate = tf.placeholder('float', [])
+        opt = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=0.95, beta2=0.99, epsilon=1e-8)
+        
+        opt = opt.minimize(loss)
+        return opt, loss, prediction, learning_rate, \
+          input_images_tensor, input_flow_tensor, input_segmentation_tensor, targets
+
+
     def get_GRU_cell(self, input_image, prev_image, flow_input, h_prev, unary_input):
         # apply softmax to h_prev and unary_input
         h_prev = self.softmax_last_dim(h_prev)

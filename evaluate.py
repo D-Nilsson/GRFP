@@ -62,10 +62,13 @@ def evaluate(args):
         saver_fn = tf.train.Saver([k for k in tf.global_variables() if k.name.startswith('flow/')])
 
     with tf.Session() as sess:
-        if args.static == 'lrr':
-            saver.restore(sess, './checkpoints/lrr_grfp')
-        elif args.static == 'dilation':
-            saver.restore(sess, './checkpoints/dilation_grfp')
+        if args.ckpt != '':
+            saver.restore(sess, './checkpoints/%s' % (args.ckpt))
+        else:
+            if args.static == 'lrr':
+                saver.restore(sess, './checkpoints/lrr_grfp')
+            elif args.static == 'dilation':
+                saver.restore(sess, './checkpoints/dilation_grfp')
 
         if args.flow == 'flownet1':
             saver_fn.restore(sess, './checkpoints/flownet1')
@@ -149,6 +152,7 @@ if __name__ == '__main__':
     parser.add_argument('--static', help='Which static network to use.', required=True)
     parser.add_argument('--flow', help='Which optical flow method to use.', required=True)
     parser.add_argument('--frames', type=int, help='Number of frames to use.', default=5, required=False)
+    parser.add_argument('--ckpt', help='Which checkpoint file to load from. Specify relative to the ./checkpoints/ directory.', default='', required=False)
 
     args = parser.parse_args()
 

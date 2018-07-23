@@ -9,7 +9,7 @@ Run misc/compile.sh to compile the bilinear warping operator. Change the include
 
 Download all pretrained models from [here](https://drive.google.com/open?id=1eGy7JcX1ptzxwQ6thEd2R_ix4VehLRQL) and unpack them under ./checkpoints/. For instance, the file ./checkpoints/flownet1.index should exist.
 
-### Usage
+### Evaluate a Pre-Trained Model
 
 Evaluate the GRFP(LRR-4x, FlowNet2) setup on the validation set by running:
 ```
@@ -29,7 +29,14 @@ python evaluate.py --static lrr --flow flownet1
 python evaluate.py --static lrr --flow farneback
 ```
 
-Evaluation using PSP and code for training will be added soon.
+### Training
+
+Train and evaluate a model with the following commands:
+```
+python train.py --static lrr --flow flownet2
+python evaluate.py --static lrr --flow flownet2 --ckpt lrr_flownet2_it10000
+```
+This should match the performance of the pre-trained LRR model above. See the ./checkpoints directory where parameters are saved during the training procedure. Only LRR is supported at the moment.
 
 ### Citation
 If you use the code in your own research, please cite
